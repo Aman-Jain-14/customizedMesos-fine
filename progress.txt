@@ -1,0 +1,56 @@
+* Resources are scalar values, scalar values are int, float or char
+* Defined in include/mesos/mesos.proto
+* How are resources/attributes defined in slaves/agents:
+http://mesos.apache.org/documentation/latest/attributes-resources/
+
+* Framework defined in include/mesos/mesos.prot LINE 208
+* We are thinking of adding 'd_vector' in Framework Info
+
+Types
+
+The types of values that are supported by Attributes and Resources in Mesos are scalar, ranges, sets and text.
+
+The following are the definitions of these types:
+
+scalar : floatValue
+
+floatValue : ( intValue ( "." intValue )? ) | ...
+
+intValue : [0-9]+
+
+range : "[" rangeValue ( "," rangeValue )* "]"
+
+rangeValue : scalar "-" scalar
+
+set : "{" text ( "," text )* "}"
+
+text : [a-zA-Z0-9_/.-]
+
+* Resources class is defined in resources.hpp in include/mesos
+* Resources class LINE 312 'sum'
+* // Get all the resources that are scalars.
+  Resources scalars() const;
+
+  // Get the types of resources associated with each resource name.
+  // NOTE: Resources of the same name must have the same type, as
+  // enforced by Resources::parse().
+  std::map<std::string, Value_Type> types() const;
+
+ // Helpers to get known resource types.
+  // TODO(vinod): Fix this when we make these types as first class
+  // protobufs.
+  Option<double> cpus() const;
+  Option<double> gpus() const;
+  Option<Bytes> mem() const;
+  Option<Bytes> disk() const;
+CPUs, GPUs, Mem and Disk are SCALAR
+
+
+Roadmap:
+* Install Protobuff compiler .. Read the document!!
+* How can 'd_vector' be defined: Resources d_vector;
+  -> Modify the Protobuff, add some values in message frameworkInfo = CPUs, Mem, float values
+    -> Modify Test Framework to add some lines to add the extra field in the Protobuff
+  	-> Modify add() in sorter.hpp line 81
+  	-> Modify function call in hierarchial.cpp line 259
+* Modify sort algorithm in sort.cpp
