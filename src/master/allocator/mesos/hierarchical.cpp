@@ -1794,7 +1794,55 @@ void HierarchicalAllocatorProcess::__allocate()
         // Since shared resources are offerable even when they are in use, we
         // make one copy of the shared resources available regardless of the
         // past allocations.
-        Resources available = slave.available().nonShared();
+        Resources available = slave.available();
+
+        int flag = 0, flag1 = 0; // Sanity Checking This and below
+
+        foreach (const Resource& resource, available) {
+              if(resource.name() == "cpus")
+              {
+                if((resource.scalar().value() - framework.cpus) < 0.0)
+                {
+                  flag = 1;
+                  LOG (INFO) << "\n\nITS IN CPU .. ";
+                  break;
+                }
+              }
+              if(resource.name() == "mem")
+              {
+                if((resource.scalar().value() - framework.mem) < 0)
+                {
+                  flag1 = 1;
+                  LOG (INFO) << "\n\nITS IN MEM .. ";
+                  break;
+                }
+              }
+        }
+
+        if (flag == 1 || flag1 == 1)
+        {
+          LOG (INFO) <<"\nNot Enough Resources on this Slave, continuing .. ";
+          continue;
+        }
+
+        flag = 0, flag1 = 0; // Sanity Checking This and below
+
+        foreach (const Resource& resource, available) {
+              if(resource.name() == "cpus")
+              {
+                flag = 1;
+              }
+              if(resource.name() == "mem")
+              {
+                flag1 = 1;
+              }
+        }
+
+        if (flag == 0 || flag1 == 0)
+        {
+          LOG (INFO) <<"\nNot Enough Resources on this Slave (2), continuing .. ";
+          continue;
+        }
 
         // Offer a shared resource only if it has not been offered in
         // this offer cycle to a framework.
@@ -1974,6 +2022,18 @@ void HierarchicalAllocatorProcess::__allocate()
           // non-revocable.
           quotaRoleSorter->allocated(role, slaveId, resources.nonRevocable());
         }
+
+        available = slave.available();
+        resources = available.reserved(role);
+        LOG (INFO) << " Resources after allocation on this slave : ";
+        foreach (const Resource& resource, available) {
+              LOG (INFO) << "Total "
+              << resource.name() << " are "
+              << resource.scalar().value()  << std::endl;
+        }
+        LOG (INFO) << "Value of FLAG " <<flag<<" Value of FLAG1 " <<flag1;
+        // scalarQuantity = resources.nonShared().createStrippedScalarQuantity();
+
       }
     }
   }
